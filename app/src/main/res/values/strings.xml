@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">LazyViewHolderExample</string>
+    <string name="position">Position: %d</string>
+</resources>

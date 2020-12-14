@@ -1,0 +1,3 @@
+include ':LazyAdapter'
+include ':app'
+rootProject.name = "LazyViewHolderExample"
