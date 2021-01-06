@@ -37,7 +37,7 @@ abstract class AbstractAdapter<VH : RecyclerView.ViewHolder, IT> : RecyclerView.
         }
     }
 
-    protected open fun getId(position: Int?): Any? {
+    protected open fun getId(position: Int): Any? {
         return null
     }
 
