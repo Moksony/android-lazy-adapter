@@ -4,11 +4,15 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 
-abstract class AbstractRecyclerView<VH : RecyclerView.ViewHolder, IT> : RecyclerView.Adapter<VH>() {
+abstract class AbstractAdapter<VH : RecyclerView.ViewHolder, IT> : RecyclerView.Adapter<VH>() {
     var items: MutableList<IT>? = null
     var originalItems: Iterable<IT>? = null
-    private val idHashMap = HashMap<String, Long>()
+    private val idHashMap = HashMap<Any, Long>()
     protected var isStringId: Boolean = false
+
+    init {
+        setHasStableStringId(true)
+    }
 
     private var nextId: Long = 0
         get() {
@@ -23,7 +27,7 @@ abstract class AbstractRecyclerView<VH : RecyclerView.ViewHolder, IT> : Recycler
 
     override fun getItemId(position: Int): Long {
         if (this.isStringId) {
-            val id = getStringId(getItemAt(position)!!) ?: return RecyclerView.NO_ID
+            val id = getId(position) ?: return RecyclerView.NO_ID
             if (!this.idHashMap.containsKey(id)) {
                 this.idHashMap[id] = nextId
             }
@@ -33,7 +37,7 @@ abstract class AbstractRecyclerView<VH : RecyclerView.ViewHolder, IT> : Recycler
         }
     }
 
-    protected fun getStringId(item: IT): String? {
+    protected open fun getId(position: Int?): Any? {
         return null
     }
 
