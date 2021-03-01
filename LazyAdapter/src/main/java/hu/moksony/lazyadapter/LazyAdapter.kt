@@ -16,9 +16,17 @@ class LazyAdapter<T>(
 
     override fun getItemViewType(position: Int): Int {
         val item = getItemAt(position) ?: throw Exception("item can not be null")
-        return config.typeList.indexOfFirst {
+        val index =  config.typeList.indexOfFirst {
             it.itemClass == item::class
         }
+
+        //fix ex: Uri
+        if(index == -1){
+            return config.typeList.indexOfFirst {
+                item::class.isInstance(item)
+            }
+        }
+        return index
     }
 
     override fun getId(position: Int): Any? {
