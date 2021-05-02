@@ -1,29 +1,28 @@
 package hu.moksony.lazyadapter
 
-import android.app.Activity
 import androidx.databinding.ViewDataBinding
 
 
 fun <T> lazyTypedAdapter(
-    builder: LazyAdapterBuilder<T>.() -> Unit
+    builder: LazyAdapterConfig<T>.() -> Unit
 ): LazyAdapter<T> {
-    val config = LazyAdapterBuilder<T>()
+    val config = LazyAdapterConfig<T>()
     builder.invoke(config)
     return config.build()
 }
 
 fun lazyAdapter(
-    builder: LazyAdapterBuilder<Any>.() -> Unit
+    builder: LazyAdapterConfig<Any>.() -> Unit
 ): LazyAdapter<Any> {
-    val config = LazyAdapterBuilder<Any>()
+    val config = LazyAdapterConfig<Any>()
     builder.invoke(config)
     return config.build()
 }
 
 inline fun <reified VDB : ViewDataBinding, reified IT : Any> simpleLazyAdapter(
-    call: LazyRowType<VDB, IT>.() -> Unit
+    call: LazyItem<VDB, IT>.() -> Unit
 ): LazyAdapter<IT> {
-    val config = LazyAdapterBuilder<IT>()
+    val config = LazyAdapterConfig<IT>()
     config.type(call)
     return config.build()
 }

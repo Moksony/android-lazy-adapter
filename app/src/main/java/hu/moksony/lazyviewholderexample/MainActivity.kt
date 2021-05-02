@@ -4,12 +4,10 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import androidx.databinding.DataBindingUtil
-import androidx.databinding.ViewDataBinding
 import hu.moksony.lazyadapter.*
 import hu.moksony.lazyviewholderexample.databinding.ActivityMainBinding
-import hu.moksony.lazyviewholderexample.databinding.RomTextBodyItemBinding
+import hu.moksony.lazyviewholderexample.databinding.RowTextBodyItemBinding
 import hu.moksony.lazyviewholderexample.databinding.RowTextItemBinding
-import kotlin.reflect.KClass
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,7 +18,7 @@ class MainActivity : AppCompatActivity() {
 
 
         val adapter = lazyTypedAdapter<UIModel> {
-            type<UIModel.BodyItem, RomTextBodyItemBinding> {
+            type<UIModel.BodyItem, RowTextBodyItemBinding> {
                 onBind {
                     this.text = it?.headerItem?.text
                 }
@@ -28,15 +26,33 @@ class MainActivity : AppCompatActivity() {
                     this.headerItem.text
                 }
             }
+            type<UIModel.HeaderItem, RowTextItemBinding> {
+                onBind {
+                    this.position = it?.headerItem?.position
+                }
+
+                onViewHolderCreated {
+                    this.binding.root.setOnClickListener {
+                        Log.d(TAG, "onCreate: $data")
+                    }
+                }
+            }
         }
 
         recyclerView.adapter = adapter
 
         val items = listOf(
+            UIModel.HeaderItem(Header(1)),
             UIModel.BodyItem(Body("Body 1")),
             UIModel.BodyItem(Body("Body 2")),
+            UIModel.HeaderItem(Header(2)),
             UIModel.BodyItem(Body("Body 3")),
         )
         adapter.submit(items)
+    }
+
+    companion object
+    {
+        private const val TAG = "MainActivity"
     }
 }

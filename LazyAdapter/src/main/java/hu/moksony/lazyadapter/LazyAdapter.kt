@@ -4,24 +4,23 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
-import androidx.recyclerview.widget.RecyclerView
-import androidx.viewbinding.ViewBinding
+import androidx.recyclerview.widget.ListAdapter
 import java.lang.Exception
 
 class LazyAdapter<T>(
-    val config: LazyAdapterBuilder<T>
+    val config: LazyAdapterConfig<T>
 ) :
-    AbstractAdapter<LazyAdapterViewHolder<ViewDataBinding>, T>() {
+    ListAdapter<T, LazyViewHolder<ViewDataBinding, T>>(LazyDiffUtil(config)) {
 
 
     override fun getItemViewType(position: Int): Int {
-        val item = getItemAt(position) ?: throw Exception("item can not be null")
-        val index =  config.typeList.indexOfFirst {
+        val item = getItem(position) ?: throw Exception("item can not be null")
+        val index = config.typeList.indexOfFirst {
             it.itemClass == item::class
         }
 
         //fix ex: Uri
-        if(index == -1){
+        if (index == -1) {
             return config.typeList.indexOfFirst {
                 item::class.isInstance(item)
             }
@@ -29,17 +28,12 @@ class LazyAdapter<T>(
         return index
     }
 
-    override fun getId(position: Int): Any? {
-        val item = getItemAt(position) ?: return null
-        return config.typeList[getItemViewType(position)].id?.invoke(item)
-    }
-
-    override fun createViewHolder(
-        inflater: LayoutInflater,
+    override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
-    ): LazyAdapterViewHolder<ViewDataBinding> {
-        val typeHelper = config.typeList[viewType]!!
+    ): LazyViewHolder<ViewDataBinding, T> {
+        val inflater = LayoutInflater.from(parent.context)
+        val typeHelper = config.typeList[viewType]
         val layoutId = typeHelper.layoutId
         val binding: ViewDataBinding
         if (layoutId == null) {
@@ -57,55 +51,32 @@ class LazyAdapter<T>(
         typeHelper.onCreated?.invoke(binding)
 
         val customViewHolderFn = typeHelper.createViewHolder
-        val viewHolder: LazyAdapterViewHolder<ViewDataBinding>
+        val viewHolder: LazyViewHolder<ViewDataBinding, T>
         if (customViewHolderFn != null) {
-            viewHolder = customViewHolderFn.invoke(binding)
+            viewHolder = customViewHolderFn.invoke(binding) as LazyViewHolder<ViewDataBinding, T>
         } else {
-            viewHolder = LazyAdapterViewHolder(binding)
+            viewHolder = LazyViewHolder(binding)
         }
+        typeHelper.onViewHolderCreated?.invoke(viewHolder as LazyViewHolder<ViewDataBinding, Any>)
         return viewHolder
     }
 
-    override fun onBindViewHolder(holder: LazyAdapterViewHolder<ViewDataBinding>, position: Int) {
-        val item = getItemAt(position)
-        config.typeList[holder.itemViewType].onBindViewHolder?.invoke(holder, item)
+    @Deprecated("Deprecated call",
+        ReplaceWith("submitList(list)", "hu.moksony.lazyadapter.LazyAdapter")
+    )
+    fun submit(list: List<T>) {
+        this.submitList(list)
+    }
+
+    override fun onBindViewHolder(holder: LazyViewHolder<ViewDataBinding, T>, position: Int) {
+        val item = getItem(position)
+        holder.data = item
+        config.typeList[holder.itemViewType].onBindViewHolder?.invoke(
+            holder as LazyViewHolder<ViewDataBinding, Any>,
+            item
+        )
         config.typeList[holder.itemViewType].onBind?.invoke(holder.binding, item)
     }
 
-    //    override fun createViewHolder(
-//        inflater: LayoutInflater,
-//        parent: ViewGroup,
-//        viewType: Int
-//    ): LazyAdapterViewHolder<VDB> {
-//        val layoutId = config.layoutId
-//        val binding: ViewDataBinding
-//        if (layoutId == null) {
-//
-//            val method = config._vdb::java.get().getDeclaredMethod(
-//                "inflate",
-//                android.view.LayoutInflater::class.java,
-//                android.view.ViewGroup::class.java,
-//                Boolean::class.java
-//            )
-//            binding = method.invoke(null, inflater, parent, false) as VDB
-//        } else {
-//            binding = DataBindingUtil.inflate(inflater, layoutId, parent, false)
-//        }
-//
-//
-//        val holderInflater = config.onCreateViewHolder
-//        val adapter: LazyAdapterViewHolder<VDB>
-//        if (holderInflater != null) {
-//            adapter = holderInflater.invoke(this)
-//        } else {
-//            adapter = LazyAdapterViewHolder<VDB>(binding as VDB)
-//        }
-//        config.onCreated?.invoke(binding as VDB)
-//        return adapter
-//    }
-//
-//    override fun onBindViewHolder(holder: LazyAdapterViewHolder<VDB>, position: Int) {
-//        val item = getItemAt(position)
-//        config.onBind?.invoke(holder.binding, item)
-//    }
+    companion object {}
 }
